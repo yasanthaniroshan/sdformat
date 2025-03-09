@@ -5,3 +5,8 @@ build_*
 .vscode
 __pycache__
 bazel-*
+
+bin/
+lib/
+lib64
+*.cfg

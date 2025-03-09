@@ -1,0 +1,45 @@
+name: SDFormat Build & Test
+
+on:
+  push:
+    branches:
+      - feature/python-packaging
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest 
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name : Adding GPG key
+        run: |
+          sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
+          wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
+          sudo apt update
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt -y install \
+            $(sort -u $(find . -iname 'packages-'`lsb_release -cs`'.apt' -o -iname 'packages.apt' | tr '\n' ' '))
+
+      - name: Build & Install SDFormat
+        run: |
+          mkdir -p build
+          pushd build
+          cmake .. -DCMAKE_INSTALL_PREFIX=/python_packaging
+          make -j 4 
+          popd
+
+      - name: Copy python_packaging to SDFormats
+        run: |
+          mkdir -p sdformat-python
+          cp -r build/python_packaging sdformat-python
+
+          
