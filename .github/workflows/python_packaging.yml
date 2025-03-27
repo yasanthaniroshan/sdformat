@@ -36,15 +36,15 @@ jobs:
           mkdir -p build
           pushd build
           cmake .. -DCMAKE_INSTALL_PREFIX=/python_packaging
-          make -j 4 
+          make -j $(nproc)
           popd
           mkdir -p library
           cp -r build/lib/* library
           zip -r library.zip library/
 
-          - name: Upload Build Artifacts
-          uses: actions/upload-artifact@v4
-          with:
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
             name: micropython
             path: boards/OBO_CAR/build/micropython.bin
 
