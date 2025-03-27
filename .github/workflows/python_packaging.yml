@@ -45,22 +45,22 @@ jobs:
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-            name: micropython
-            path: boards/OBO_CAR/build/micropython.bin
+            name: library
+            path: library.zip
 
       - name: Get Version Tag
         id: version_tag
         run: echo "tag=v$(date +'%Y.%m.%d')-build-${GITHUB_RUN_NUMBER}" >> $GITHUB_OUTPUT
   
       - name: Create release
-        id: create-new-obo-car-image-release
+        id: SDFormat_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ steps.version_tag.outputs.tag }}
         run: |
           gh release create "${{ steps.version_tag.outputs.tag }}" \
               --repo="$GITHUB_REPOSITORY" \
-              --title="Obo Car Micropython - ${{ steps.version_tag.outputs.tag }}" \
+              --title="SDFormat Python Library - ${{ steps.version_tag.outputs.tag }}" \
               --generate-notes
 
 
@@ -69,7 +69,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload "${{steps.version_tag.outputs.tag }}" \
-              boards/OBO_CAR/build/micropython.bin 
+              library.zip 
 
 
           
