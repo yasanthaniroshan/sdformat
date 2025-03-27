@@ -10,8 +10,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  package:
     runs-on: ubuntu-latest 
+    permissions:
+      contents: write 
 
     steps:
       - name: Checkout repository
@@ -36,10 +38,38 @@ jobs:
           cmake .. -DCMAKE_INSTALL_PREFIX=/python_packaging
           make -j 4 
           popd
+          mkdir -p library
+          cp -r build/lib/* library
+          zip -r library.zip library/
 
-      - name: Copy python_packaging to SDFormats
+          - name: Upload Build Artifacts
+          uses: actions/upload-artifact@v4
+          with:
+            name: micropython
+            path: boards/OBO_CAR/build/micropython.bin
+
+      - name: Get Version Tag
+        id: version_tag
+        run: echo "tag=v$(date +'%Y.%m.%d')-build-${GITHUB_RUN_NUMBER}" >> $GITHUB_OUTPUT
+  
+      - name: Create release
+        id: create-new-obo-car-image-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.version_tag.outputs.tag }}
         run: |
-          mkdir -p sdformat-python
-          cp -r build/python_packaging sdformat-python
+          gh release create "${{ steps.version_tag.outputs.tag }}" \
+              --repo="$GITHUB_REPOSITORY" \
+              --title="Obo Car Micropython - ${{ steps.version_tag.outputs.tag }}" \
+              --generate-notes
+
+
+      - name: Upload Binary to Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{steps.version_tag.outputs.tag }}" \
+              boards/OBO_CAR/build/micropython.bin 
+
 
           
